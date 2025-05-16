@@ -1,0 +1,8 @@
+ezdxf
+geopandas
+matplotlib
+openpyxl
+ipyleaflet
+torch
+scikit-learn
+scipy
