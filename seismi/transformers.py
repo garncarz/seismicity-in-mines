@@ -33,7 +33,7 @@ class SeismicTransformer(nn.Module):
     Transformer model for predicting future seismic events.
     """
     def __init__(self, input_dim=5, embedding_dim=64, num_heads=4,
-                 num_encoder_layers=2, output_dim=4):
+                 num_encoder_layers=2, output_dim=5):
         super().__init__()
 
         self.event_encoder = SeismicEventEncoder(input_dim, embedding_dim)
@@ -82,7 +82,7 @@ class SeismicTransformer(nn.Module):
         else:
             encoded = self.transformer_encoder(embeddings)
 
-        # Generate output predictions (x, y, depth, energy)
+        # Generate output predictions (x, y, depth, energy, timestamp)
         output = self.output_layer(encoded)
 
         return output
@@ -114,7 +114,7 @@ class SeismicEventDataset(Dataset):
         # Ensure events are sorted by time
         self.events.sort_values(by=time_feature, inplace=True)
 
-        # Create feature and target arrays
+        # Create feature and target arrays (now with days_elapsed as the time feature)
         features = ['X', 'Y', 'depth', time_feature, 'Energie']
         self.data = self.events[features].values
         # Log-transform energy before scaling
@@ -139,8 +139,8 @@ class SeismicEventDataset(Dataset):
         y_idx = idx + self.seq_length + self.prediction_horizon - 1
         y = self.data_scaled[y_idx]
 
-        # Extract only x, y, depth, and energy for prediction
-        y = y[[0, 1, 2, 4]]  # X, Y, depth, Energie
+        # Extract x, y, depth, days_elapsed, energy for prediction
+        y = y[[0, 1, 2, 3, 4]]  # X, Y, depth, days_elapsed, Energie
 
         return torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
@@ -337,11 +337,12 @@ def predict_future_events(model, initial_sequence, n_future=10, scaler=None, dev
     # Inverse transform if scaler is provided
     if scaler:
         dummy = np.zeros((len(predictions), scaler.n_features_in_))
-        dummy[:, [0, 1, 2, 4]] = predictions  # X, Y, depth, Energie
+        # X, Y, depth, days_elapsed, Energie
+        dummy[:, [0, 1, 2, 3, 4]] = predictions  # X, Y, depth, days_elapsed, Energie
         dummy_inverse = scaler.inverse_transform(dummy)
-        predictions = dummy_inverse[:, [0, 1, 2, 4]]
-        # Apply expm1 to energy (column 3)
-        predictions[:, 3] = np.expm1(predictions[:, 3])
+        predictions = dummy_inverse[:, [0, 1, 2, 3, 4]]
+        # Apply expm1 to energy (column 4)
+        predictions[:, 4] = np.expm1(predictions[:, 4])
 
     return predictions
 
