@@ -34,6 +34,11 @@ def df_to_gdf(df, x_col='X', y_col='Y', source_crs='EPSG:5514', target_crs='EPSG
     )
     if target_crs and target_crs != source_crs:
         gdf = gdf.to_crs(target_crs)
+
+    # Overwrite X and Y with longitude and latitude in degrees
+    gdf[x_col] = gdf.geometry.x
+    gdf[y_col] = gdf.geometry.y
+
     return gdf
 
 
