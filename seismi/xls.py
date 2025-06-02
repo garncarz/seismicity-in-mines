@@ -59,11 +59,14 @@ def read_seismic_events(filename='seismic_events.xlsx'):
     df = pd.read_excel(filename)
     df.rename(columns={'!-X': 'Y', '!-Y': 'X'}, inplace=True)
 
-    numeric_cols = ['Magn', 'Energie']
+    # Standardize column names
+    df.rename(columns={'Energie': 'energy', 'Datetime': 'datetime'}, inplace=True)
+
+    numeric_cols = ['Magn', 'energy']
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    df['Datetime'] = pd.to_datetime(
+    df['datetime'] = pd.to_datetime(
         df['Datum'].astype(str) + ' ' + df['hh:mm:ss.sss'],
         format='mixed',
         dayfirst=True,

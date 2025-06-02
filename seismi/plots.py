@@ -68,7 +68,7 @@ def add_seismic_events(m, events, colormap=None, min_radius=4, max_radius=15):
         List of added markers
     """
     # Create log energy values for scaling
-    log_energy = np.log10(events.Energie.replace(0, np.nan)).dropna()
+    log_energy = np.log10(events.energy.replace(0, np.nan)).dropna()
     min_log_e, max_log_e = log_energy.min(), log_energy.max()
 
     # Create colormap if not provided
@@ -83,11 +83,11 @@ def add_seismic_events(m, events, colormap=None, min_radius=4, max_radius=15):
     markers = []
     for _, row in events.iterrows():
         point = row.geometry
-        log_e = np.log10(row.Energie)
+        log_e = np.log10(row.energy)
 
         popup = Popup(
             location=(point.y, point.x),
-            child=HTML(f'{row.Datetime} / E = {row.Energie}'),
+            child=HTML(f'{row.datetime} / E = {row.energy}'),
         )
 
         marker = CircleMarker(

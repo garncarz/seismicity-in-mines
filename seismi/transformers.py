@@ -115,7 +115,7 @@ class SeismicEventDataset(Dataset):
         self.events.sort_values(by=time_feature, inplace=True)
 
         # Create feature and target arrays (now with days_elapsed as the time feature)
-        features = ['X', 'Y', 'depth', time_feature, 'Energie']
+        features = ['X', 'Y', 'depth', time_feature, 'energy']
         self.data = self.events[features].values
         # Log-transform energy before scaling
         self.data[:, 4] = np.log1p(self.data[:, 4])
@@ -152,7 +152,7 @@ def prepare_time_features(events_df, reference_time=None):
     Parameters:
     -----------
     events_df : pandas.DataFrame
-        DataFrame with seismic events including 'Datetime' column
+        DataFrame with seismic events including 'datetime' column
     reference_time : pandas.Timestamp, optional
         Reference time for calculating elapsed time (defaults to min datetime)
 
@@ -164,18 +164,18 @@ def prepare_time_features(events_df, reference_time=None):
     df = events_df.copy()
 
     # Ensure datetime column exists
-    if 'Datetime' not in df.columns:
-        raise ValueError("DataFrame must contain a 'Datetime' column")
+    if 'datetime' not in df.columns:
+        raise ValueError("DataFrame must contain a 'datetime' column")
 
     # Sort by time
-    df.sort_values('Datetime', inplace=True)
+    df.sort_values('datetime', inplace=True)
 
     # Set reference time if not provided
     if reference_time is None:
-        reference_time = df['Datetime'].min()
+        reference_time = df['datetime'].min()
 
     # Calculate elapsed time features
-    df['seconds_elapsed'] = (df['Datetime'] - reference_time).dt.total_seconds()
+    df['seconds_elapsed'] = (df['datetime'] - reference_time).dt.total_seconds()
     df['minutes_elapsed'] = df['seconds_elapsed'] / 60
     df['hours_elapsed'] = df['minutes_elapsed'] / 60
     df['days_elapsed'] = df['hours_elapsed'] / 24

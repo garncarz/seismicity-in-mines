@@ -127,9 +127,9 @@ def prepare_data(seismic_events, depths_interpolated, log_transform=True, test_s
 
     # Apply log transform to energy values if requested
     if log_transform:
-        y = np.log1p(seismic_events['Energie'].values)
+        y = np.log1p(seismic_events['energy'].values)
     else:
-        y = seismic_events['Energie'].values
+        y = seismic_events['energy'].values
 
     # Remove events where depth could not be interpolated
     mask = ~np.isnan(X[:, 2])
