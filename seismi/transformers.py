@@ -117,8 +117,8 @@ class SeismicEventDataset(Dataset):
         # Create feature and target arrays
         features = ['X', 'Y', 'depth', time_feature, 'Energie']
         self.data = self.events[features].values
-
-        # Normalize features
+        # Log-transform energy before scaling
+        self.data[:, 4] = np.log1p(self.data[:, 4])
         self.scaler = StandardScaler()
         self.data_scaled = self.scaler.fit_transform(self.data)
 
@@ -336,15 +336,12 @@ def predict_future_events(model, initial_sequence, n_future=10, scaler=None, dev
 
     # Inverse transform if scaler is provided
     if scaler:
-        # Create dummy array with all features to use with scaler
         dummy = np.zeros((len(predictions), scaler.n_features_in_))
         dummy[:, [0, 1, 2, 4]] = predictions  # X, Y, depth, Energie
-
-        # Inverse transform
         dummy_inverse = scaler.inverse_transform(dummy)
-
-        # Extract the relevant columns
         predictions = dummy_inverse[:, [0, 1, 2, 4]]
+        # Apply expm1 to energy (column 3)
+        predictions[:, 3] = np.expm1(predictions[:, 3])
 
     return predictions
 
