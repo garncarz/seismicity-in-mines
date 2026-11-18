@@ -1,0 +1,41 @@
+import unittest
+
+from app import create_app
+
+
+PANEL = {
+    "description": (
+        "Porub 138 708\n"
+        "1, -458381, -1103315\n"
+        "2, -457807, -1103568\n"
+        "3, -457826, -1103726\n"
+        "Dobývání porubu od 1. 9. 1989 do 1. 12. 1990"
+    )
+}
+
+
+class PanelRouteTests(unittest.TestCase):
+    def setUp(self):
+        self.client = create_app().test_client()
+
+    def test_preview_returns_transformed_boundary_and_parsed_fields(self):
+        response = self.client.post("/api/panels/preview", json=PANEL)
+        self.assertEqual(response.status_code, 200)
+        preview = response.get_json()
+        self.assertEqual(preview["identifier"], "138 708")
+        self.assertEqual(preview["mining_start"], "1989-09-01")
+        self.assertEqual(preview["monitoring_geojson"]["type"], "Polygon")
+
+    def test_preview_reports_invalid_polygon_input(self):
+        response = self.client.post("/api/panels/preview", json={"description": "Porub 42"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("vertices", response.get_json()["error"])
+
+    def test_homepage_serves_the_application_shell(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Seismicity Explorer", response.data)
+
+
+if __name__ == "__main__":
+    unittest.main()
