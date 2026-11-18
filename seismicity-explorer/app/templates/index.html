@@ -13,6 +13,7 @@
       <div>
         <p class="eyebrow">MINING · SPACE · TIME</p>
         <h1>Seismicity Explorer</h1>
+        <p class="topbar-subtitle">Explore seismic events around mining panels</p>
       </div>
       <span class="crs-badge">Stored in S-JTSK / EPSG:5514</span>
     </header>
@@ -22,7 +23,7 @@
         <aside class="sidebar">
           <section class="card">
             <div class="section-title">
-              <div><p class="eyebrow">ANALYSIS</p><h2>Selected panel</h2></div>
+              <div><p class="eyebrow">DASHBOARD</p><h2>Panel 138 708</h2></div>
               <button id="new-panel" class="button secondary" type="button">New</button>
             </div>
             <div class="button-row panel-management">
@@ -32,6 +33,7 @@
             <label for="panel-select">Mining panel</label>
             <select id="panel-select"><option value="">Loading panels…</option></select>
             <div id="panel-summary" class="muted small"></div>
+            <p class="muted small">The map and statistics update for the selected panel and filters.</p>
           </section>
 
           <section class="card">
@@ -42,6 +44,7 @@
               <option value="range">Custom date interval</option>
               <option value="all" selected>All dates</option>
             </select>
+            <p class="muted small">“All dates” ignores mining dates. “Mining period” uses this panel’s saved dates. Custom dates include both endpoints.</p>
             <div id="date-range" class="date-grid hidden">
               <div><label for="start-date">From</label><input id="start-date" type="date"></div>
               <div><label for="end-date">To</label><input id="end-date" type="date"></div>
@@ -54,9 +57,11 @@
             <p class="muted small">Spatial selection uses the monitoring boundary; time and value filters are applied independently.</p>
           </section>
 
-          <section class="card">
-            <div class="section-title"><div><p class="eyebrow">DATA</p><h2>Import workbook</h2></div></div>
-            <form id="import-form">
+          <details class="card admin-section">
+            <summary><p class="eyebrow">DATA ADMINISTRATION</p><h2>Import research workbook</h2></summary>
+            <div class="admin-content">
+              <p class="muted small">For administrators: import an Excel event catalogue, measured boreholes, or an interpolated depth grid. Original attributes are retained.</p>
+              <form id="import-form">
               <label for="import-type">Workbook content</label>
               <select id="import-type" name="source_type">
                 <option value="auto">Detect from headers</option>
@@ -69,12 +74,18 @@
               <label for="import-file">Excel workbook (.xlsx)</label>
               <input id="import-file" name="file" type="file" accept=".xlsx" required>
               <button class="button secondary full" type="submit">Import workbook</button>
-            </form>
-            <div id="import-result" class="small" role="status"></div>
-          </section>
+              </form>
+              <div id="import-result" class="small" role="status"></div>
+            </div>
+          </details>
 
-          <section class="card">
-            <div class="section-title"><div><p class="eyebrow">MANAGEMENT</p><h2>Panel boundary</h2></div></div>
+          <details id="panel-management" class="card admin-section">
+            <summary><p class="eyebrow">PANEL ADMINISTRATION</p><h2>Manage mining panels</h2></summary>
+            <div class="admin-content">
+            <div class="button-row panel-management">
+              <button id="edit-selected" class="button secondary" type="button">Edit selected</button>
+              <button id="delete-selected" class="button secondary" type="button">Delete</button>
+            </div>
             <p class="muted small">Paste the original description and ordered vertex rows. Preview validates the polygon and buffer before saving.</p>
             <label for="panel-seam">Seam (optional)</label>
             <input id="panel-seam" type="text" placeholder="e.g. Sloj 40">
@@ -87,7 +98,8 @@
               <button id="save-panel" class="button primary" type="button" disabled>Save panel</button>
             </div>
             <button id="cancel-edit" class="text-button hidden" type="button">Cancel editing</button>
-          </section>
+            </div>
+          </details>
           <div id="notice" class="notice hidden" role="alert"></div>
         </aside>
 
@@ -100,7 +112,7 @@
             <span id="event-count" class="muted small">Select a panel to begin.</span>
           </div>
           <div id="map" aria-label="Interactive map of mining panels and seismic events"></div>
-          <div class="map-legend"><span class="legend-dot"></span> Events: size by energy · colour by magnitude</div>
+          <div class="map-legend"><span class="legend-dot"></span> Events: size by energy · red intensity by magnitude</div>
 
           <section class="statistics">
             <div class="stat-card"><span>Events</span><strong id="stat-count">—</strong></div>
@@ -111,8 +123,16 @@
           </section>
 
           <section class="charts">
-            <article class="card chart-card"><h2>Energy distribution</h2><canvas id="energy-chart"></canvas></article>
-            <article class="card chart-card"><h2>Monthly seismicity and cumulative energy</h2><canvas id="time-chart"></canvas></article>
+            <article class="card chart-card">
+              <h2>Energy distribution</h2>
+              <p class="muted small">Events grouped by energy range. Taller bars mean more events in that range.</p>
+              <div class="chart-plot"><canvas id="energy-chart"></canvas></div>
+            </article>
+            <article class="card chart-card">
+              <h2>Monthly seismicity and cumulative energy</h2>
+              <p class="muted small">Bars show events per month; the line shows total energy accumulated over time.</p>
+              <div class="chart-plot"><canvas id="time-chart"></canvas></div>
+            </article>
           </section>
           <p id="chart-empty" class="muted small"></p>
         </section>

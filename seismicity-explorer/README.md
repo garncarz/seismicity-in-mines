@@ -26,7 +26,21 @@ original workbook attributes are kept as JSONB, and imports are recorded by
 file checksum and sheet. Re-uploading the same workbook and type reports its
 previous result without duplicating data. Seismic events are deduplicated by
 their normalized time, coordinates, depth, magnitude, and energy; all source
-rows remain linked for traceability.
+rows remain linked for traceability. The per-import duplicate count includes
+both repeated rows in a workbook and events already present from earlier
+imports.
+
+## Current development database
+
+The persistent development database is initialized with 143,181 unique
+seismic events from 149,631 accepted source rows, 14 measured borehole points,
+and 5,100 interpolated grid points. The additional 2013 workbook contributes
+6,506 source rows; 6,447 match events already in the main catalogue. Its 58
+malformed magnitude cells are retained in the original attributes and stored
+as null magnitudes. Panel `138 708` is preselected on the dashboard with its
+1989-09-01 to 1990-12-01 mining period and 100 m monitoring buffer. A fresh
+database volume does not contain these imports until the workbooks are
+imported.
 
 ## Run locally or deploy
 
@@ -36,20 +50,31 @@ From this directory:
    Keep `.env` private; it is ignored by git.
 2. Start the database and application with `docker compose up --build -d`.
    The database has no published port. The app binds to `127.0.0.1:8000` by
-   default; set `APP_PORT` to change it.
+   default for local access; set `APP_PORT` to change it. The app also joins
+   the Docker network `seismicity` with the stable alias `seismicity-app`;
+   PostgreSQL does not join that network.
 3. Create an Nginx Basic Auth file outside this directory, for example:
    `sudo htpasswd -c /etc/nginx/seismicity.htpasswd analyst`.
-4. Install `nginx/seismicity.conf.template` into the existing Nginx setup.
-   Render only the two deployment variables from `.env` (so Nginx variables
-   such as `$host` remain intact), for example:
-   ```sh
-   set -a; . ./.env; set +a
-   envsubst '${PUBLIC_HOST} ${APP_PORT}' < nginx/seismicity.conf.template \
-     | sudo tee /etc/nginx/sites-available/seismicity.conf
+4. Attach the Nginx container to the same Docker network. In the Nginx
+   Compose project, declare the network as external:
+   ```yaml
+   services:
+     nginx:
+       networks:
+         - default
+         - seismicity
+   networks:
+     seismicity:
+       external: true
+       name: seismicity
    ```
-   Then enable the site. The template uses the corresponding Let's Encrypt
-   certificate paths and redirects HTTP to HTTPS. Ensure Nginx can read the
-   htpasswd file and the certificate.
+   Add `seismicity` to the Nginx service's networks, then install
+   `nginx/seismicity.conf.template` in the container. Render only
+   `${PUBLIC_HOST}` (so Nginx variables such as `$host` remain intact). The
+   template resolves `seismicity-app` through Docker DNS and proxies to port
+   8000. It uses the corresponding Let's Encrypt certificate paths and
+   redirects HTTP to HTTPS. Ensure Nginx can read the Basic Auth file and
+   certificate.
 5. Obtain/renew the TLS certificate for the configured `PUBLIC_HOST` using the
    host's existing certificate process. The initial `.env.example` hostname is
    `seismicity.dev.garncarz.cz`; changing it does not require an app rebuild.
@@ -79,4 +104,4 @@ filter then explains that complete dates are required. Buffer operations are
 computed in PostGIS in EPSG:5514. Only map output is transformed to WGS84. The
 map uses Leaflet/OpenStreetMap and Chart.js browser assets from public CDNs.
 
-Run the focused checks with `python -m unittest discover -s tests`.
+Run the focused checks with `python -m pytest -q`.

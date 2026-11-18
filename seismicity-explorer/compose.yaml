@@ -24,6 +24,11 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
       - "127.0.0.1:${APP_PORT:-8000}:8000"
+    networks:
+      default: {}
+      seismicity:
+        aliases:
+          - seismicity-app
     depends_on:
       db:
         condition: service_healthy
@@ -36,3 +41,7 @@ services:
 
 volumes:
   seismicity_data:
+
+networks:
+  seismicity:
+    name: seismicity

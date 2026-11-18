@@ -18,12 +18,17 @@ body { margin: 0; background: var(--canvas); color: var(--ink); }
   justify-content: space-between; padding: 18px 26px;
 }
 .topbar h1 { font-size: 22px; letter-spacing: -.03em; margin: 2px 0 0; }
+.topbar-subtitle { color: #c9d9dc; font-size: 12px; margin: 5px 0 0; }
 .eyebrow { color: #8eb6bf; font-size: 10px; font-weight: 750; letter-spacing: .14em; margin: 0 0 5px; }
 .crs-badge { border: 1px solid #41616c; border-radius: 20px; color: #c9d9dc; font-size: 11px; padding: 7px 11px; }
 main { margin: 0 auto; max-width: 1800px; padding: 16px; }
 .workspace { align-items: start; display: grid; gap: 16px; grid-template-columns: minmax(290px, 360px) minmax(0, 1fr); }
 .sidebar { display: grid; gap: 12px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.admin-section summary { align-items: center; cursor: pointer; display: flex; gap: 9px; list-style: none; }
+.admin-section summary::-webkit-details-marker { display: none; }
+.admin-section summary .eyebrow { margin: 0; }
+.admin-content { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 5px; }
 .section-title { align-items: center; display: flex; justify-content: space-between; margin-bottom: 12px; }
 h2 { font-size: 15px; letter-spacing: -.015em; margin: 0; }
 label { color: #4b5c68; display: block; font-size: 11px; font-weight: 650; margin: 11px 0 5px; }
@@ -57,8 +62,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--blue); outline: 
 .stat-card span { color: var(--muted); display: block; font-size: 10px; margin-bottom: 6px; }
 .stat-card strong { display: block; font-size: clamp(14px, 1.4vw, 19px); overflow-wrap: anywhere; }
 .charts { display: grid; gap: 12px; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); }
-.chart-card { min-height: 260px; }
+.chart-card { min-width: 0; min-height: 0; }
 .chart-card h2 { margin-bottom: 12px; }
+.chart-card > p { margin: 0 0 10px; }
+.chart-plot { height: 240px; min-width: 0; position: relative; width: 100%; }
 .notice { background: #fff3e5; border: 1px solid #f1c99b; border-radius: 6px; color: #694313; font-size: 12px; line-height: 1.5; padding: 10px; }
 .issue-list { color: var(--muted); margin: 6px 0 0; padding-left: 17px; }
 .import-result { margin-top: 8px; }

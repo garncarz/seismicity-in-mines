@@ -427,6 +427,13 @@ def _import_events(connection, source_id, worksheet, headers, stats, transformer
             )
             stats["accepted_rows"] += 1
 
+    new_unique_events = connection.execute(
+        "SELECT count(DISTINCT i.fingerprint) "
+        "FROM import_events i LEFT JOIN seismic_events e USING (fingerprint) "
+        "WHERE e.id IS NULL"
+    ).fetchone()[0]
+    stats["duplicate_events"] = stats["accepted_rows"] - new_unique_events
+
     connection.execute(
         "INSERT INTO seismic_events (observed_at, x_m, y_m, z_m, magnitude, energy, "
         "fingerprint, attributes, geom) "
@@ -435,15 +442,13 @@ def _import_events(connection, source_id, worksheet, headers, stats, transformer
         "FROM import_events ORDER BY fingerprint, source_row "
         "ON CONFLICT (fingerprint) DO NOTHING"
     )
-    inserted_links = connection.execute(
+    connection.execute(
         "INSERT INTO event_sources (event_id, source_file_id, source_row, attributes) "
         "SELECT e.id, %s, i.source_row, i.attributes::jsonb "
         "FROM import_events i JOIN seismic_events e USING (fingerprint) "
         "ON CONFLICT (source_file_id, source_row) DO NOTHING RETURNING event_id",
         (source_id,),
-    ).fetchall()
-    linked_unique_events = len({row[0] for row in inserted_links})
-    stats["duplicate_events"] = max(0, stats["accepted_rows"] - linked_unique_events)
+    )
 
 
 def _import_depths(

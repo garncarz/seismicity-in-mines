@@ -76,10 +76,11 @@ function addEventPopup(event, marker) {
 }
 
 function magnitudeColor(magnitude, minimum, maximum) {
-  if (magnitude === null || magnitude === undefined || minimum === maximum) return "#dc553c";
+  if (magnitude === null || magnitude === undefined) return "#6b7280";
+  if (minimum === maximum) return "#b91c1c";
   const ratio = Math.max(0, Math.min(1, (magnitude - minimum) / (maximum - minimum)));
-  const hue = 215 - ratio * 185;
-  return `hsl(${hue}, 78%, 46%)`;
+  const lightness = 82 - ratio * 42;
+  return `hsl(4, 76%, ${lightness}%)`;
 }
 
 function drawEvents(events) {
@@ -209,7 +210,11 @@ async function loadPanels(selectedId = null) {
     option.textContent = panel.seam ? `${panel.identifier} · ${panel.seam}` : panel.identifier;
     panelSelect.append(option);
   }
-  panelSelect.value = selectedId && panels.some((p) => String(p.id) === String(selectedId)) ? String(selectedId) : "";
+  const defaultPanel = panels.find((panel) => panel.identifier === "138 708") || panels[0];
+  const requestedPanel = selectedId
+    ? panels.find((panel) => String(panel.id) === String(selectedId))
+    : defaultPanel;
+  panelSelect.value = requestedPanel ? String(requestedPanel.id) : "";
   selectPanel();
 }
 
@@ -356,7 +361,11 @@ panelSelect.addEventListener("change", () => {
 $("#preview-panel").addEventListener("click", previewPanel);
 $("#save-panel").addEventListener("click", savePanel);
 $("#cancel-edit").addEventListener("click", clearEditor);
-$("#new-panel").addEventListener("click", () => { clearEditor(); $("#panel-description").focus(); });
+$("#new-panel").addEventListener("click", () => {
+  clearEditor();
+  $("#panel-management").open = true;
+  $("#panel-description").focus();
+});
 $("#import-form").addEventListener("submit", importWorkbook);
 $("#panel-description").addEventListener("input", () => {
   if (!previewValid) return;
