@@ -108,11 +108,15 @@
             <div class="layer-toggles">
               <label><input id="show-boreholes" type="checkbox"> Boreholes</label>
               <label><input id="show-grid" type="checkbox"> Depth grid</label>
+              <label><input id="show-coordinate-grid" type="checkbox"> S-JTSK coordinate grid</label>
             </div>
             <span id="event-count" class="muted small">Select a panel to begin.</span>
           </div>
           <div id="map" aria-label="Interactive map of mining panels and seismic events"></div>
-          <div class="map-legend"><span class="legend-dot"></span> Events: size by energy · red intensity by magnitude</div>
+          <div class="map-legend">
+            <span class="legend-dot"></span> Events: size by energy · red intensity by magnitude
+            <span class="coordinate-grid-legend">Dashed grid lines and labels show EPSG:5514 X/Y coordinates in metres.</span>
+          </div>
 
           <section class="statistics">
             <div class="stat-card"><span>Events</span><strong id="stat-count">—</strong></div>

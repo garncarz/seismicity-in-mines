@@ -10,12 +10,27 @@ const panelLayer = L.featureGroup().addTo(map);
 const eventLayer = L.layerGroup().addTo(map);
 const boreholeLayer = L.layerGroup();
 const gridLayer = L.layerGroup();
+map.createPane("coordinateGridPane");
+map.getPane("coordinateGridPane").style.zIndex = 350;
+const coordinateGridLayer = L.geoJSON(null, {
+  pane: "coordinateGridPane",
+  style: { color: "#526b78", weight: 1, dashArray: "3 6", opacity: 0.62 },
+  onEachFeature: (feature, layer) => {
+    const { axis, value } = feature.properties;
+    layer.bindTooltip(`${axis} ${formatNumber(value, 0)} m`, {
+      permanent: true,
+      direction: "center",
+      className: "coordinate-grid-label",
+    });
+  },
+});
 const previewLayer = L.layerGroup().addTo(map);
 let panels = [];
 let editingId = null;
 let previewValid = false;
 let energyChart;
 let timeChart;
+let coordinateGridRequest = 0;
 
 const formatNumber = (value, fractionDigits = 2) =>
   value === null || value === undefined ? "—" :
@@ -41,6 +56,38 @@ async function requestJson(url, options = {}) {
   }
   if (!response.ok) throw new Error(body.error || `Request failed (${response.status}).`);
   return body;
+}
+
+function coordinateGridSpacing() {
+  const zoom = map.getZoom();
+  if (zoom >= 17) return 100;
+  if (zoom >= 16) return 250;
+  if (zoom >= 14) return 500;
+  if (zoom >= 12) return 1000;
+  if (zoom >= 10) return 2500;
+  if (zoom >= 8) return 5000;
+  return 10000;
+}
+
+async function refreshCoordinateGrid() {
+  if (!$("#show-coordinate-grid").checked) return;
+  const requestId = ++coordinateGridRequest;
+  const bounds = map.getBounds();
+  const query = new URLSearchParams({
+    west: bounds.getWest(),
+    south: bounds.getSouth(),
+    east: bounds.getEast(),
+    north: bounds.getNorth(),
+    spacing: coordinateGridSpacing(),
+  });
+  try {
+    const result = await requestJson(`/api/coordinate-grid?${query}`);
+    if (requestId !== coordinateGridRequest || !$("#show-coordinate-grid").checked) return;
+    coordinateGridLayer.clearLayers();
+    coordinateGridLayer.addData(result);
+  } catch (error) {
+    if (requestId === coordinateGridRequest) showNotice(error.message);
+  }
 }
 
 function setPreviewState(valid) {
@@ -385,6 +432,17 @@ $("#show-grid").addEventListener("change", async (event) => {
     try { await loadDepth("grid", gridLayer); } catch (error) { showNotice(error.message); }
   } else map.removeLayer(gridLayer);
 });
+$("#show-coordinate-grid").addEventListener("change", (event) => {
+  coordinateGridRequest += 1;
+  if (event.target.checked) {
+    map.addLayer(coordinateGridLayer);
+    refreshCoordinateGrid();
+  } else {
+    coordinateGridLayer.clearLayers();
+    map.removeLayer(coordinateGridLayer);
+  }
+});
+map.on("moveend", refreshCoordinateGrid);
 
 $("#edit-selected").addEventListener("click", editPanel);
 $("#delete-selected").addEventListener("click", deletePanel);

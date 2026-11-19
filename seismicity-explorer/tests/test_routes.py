@@ -36,6 +36,32 @@ class PanelRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Seismicity Explorer", response.data)
 
+    def test_coordinate_grid_returns_projected_x_and_y_lines(self):
+        response = self.client.get(
+            "/api/coordinate-grid"
+            "?west=18.45&south=49.82&east=18.47&north=49.84&spacing=500"
+        )
+        self.assertEqual(response.status_code, 200)
+        grid = response.get_json()
+        self.assertEqual(grid["type"], "FeatureCollection")
+        self.assertEqual(grid["spacing_m"], 500)
+        features = grid["features"]
+        self.assertTrue(any(feature["properties"]["axis"] == "X" for feature in features))
+        self.assertTrue(any(feature["properties"]["axis"] == "Y" for feature in features))
+        self.assertTrue(all(
+            feature["geometry"]["type"] == "LineString"
+            and len(feature["geometry"]["coordinates"]) > 2
+            for feature in features
+        ))
+
+    def test_coordinate_grid_rejects_unsupported_spacing(self):
+        response = self.client.get(
+            "/api/coordinate-grid"
+            "?west=18.45&south=49.82&east=18.47&north=49.84&spacing=1"
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("spacing", response.get_json()["error"])
+
 
 if __name__ == "__main__":
     unittest.main()

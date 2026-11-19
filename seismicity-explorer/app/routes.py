@@ -2,6 +2,7 @@ import math
 from datetime import date
 
 from flask import Blueprint, jsonify, render_template, request
+from pyproj import Transformer
 from werkzeug.exceptions import HTTPException
 from psycopg.types.json import Jsonb
 
@@ -12,6 +13,7 @@ from shapely.geometry import Polygon
 
 
 api = Blueprint("api", __name__)
+_GRID_SPACINGS = {100, 250, 500, 1000, 2500, 5000, 10000}
 
 
 @api.get("/")
@@ -24,6 +26,93 @@ def health():
     with connect() as connection:
         connection.execute("SELECT 1")
     return jsonify({"status": "ok"})
+
+
+@api.get("/api/coordinate-grid")
+def coordinate_grid():
+    bounds = [
+        request.args.get(name, type=float)
+        for name in ("west", "south", "east", "north")
+    ]
+    if any(value is None or not math.isfinite(value) for value in bounds):
+        return jsonify({"error": "Valid west, south, east, and north bounds are required."}), 400
+    west, south, east, north = bounds
+    if (
+        not -180 <= west < east <= 180
+        or not -90 <= south < north <= 90
+        or east - west > 20
+    ):
+        return jsonify({"error": "Map bounds must cover a valid local area."}), 400
+    spacing = request.args.get("spacing", default=1000, type=int)
+    if spacing not in _GRID_SPACINGS:
+        return jsonify({"error": "Unsupported coordinate-grid spacing."}), 400
+
+    to_mining = Transformer.from_crs("EPSG:4326", "EPSG:5514", always_xy=True)
+    to_geographic = Transformer.from_crs("EPSG:5514", "EPSG:4326", always_xy=True)
+    edge_points = []
+    steps = 20
+    for step in range(steps + 1):
+        ratio = step / steps
+        longitude = west + (east - west) * ratio
+        latitude = south + (north - south) * ratio
+        edge_points.extend(
+            ((longitude, south), (longitude, north), (west, latitude), (east, latitude))
+        )
+    projected = [
+        to_mining.transform(longitude, latitude)
+        for longitude, latitude in edge_points
+    ]
+    projected = [(x, y) for x, y in projected if math.isfinite(x) and math.isfinite(y)]
+    if not projected:
+        return jsonify({"error": "Map bounds could not be transformed to EPSG:5514."}), 400
+    min_x = min(point[0] for point in projected)
+    max_x = max(point[0] for point in projected)
+    min_y = min(point[1] for point in projected)
+    max_y = max(point[1] for point in projected)
+    x_values = range(
+        math.ceil(min_x / spacing) * spacing,
+        math.floor(max_x / spacing) * spacing + 1,
+        spacing,
+    )
+    y_values = range(
+        math.ceil(min_y / spacing) * spacing,
+        math.floor(max_y / spacing) * spacing + 1,
+        spacing,
+    )
+    if len(x_values) + len(y_values) > 160:
+        return jsonify(
+            {"error": "Zoom in to view the coordinate grid at this spacing."}
+        ), 400
+
+    features = []
+    for axis, values, start, end in (
+        ("X", x_values, min_y, max_y),
+        ("Y", y_values, min_x, max_x),
+    ):
+        for value in values:
+            line = []
+            for step in range(steps + 1):
+                position = start + (end - start) * step / steps
+                x, y = (value, position) if axis == "X" else (position, value)
+                longitude, latitude = to_geographic.transform(x, y)
+                if math.isfinite(longitude) and math.isfinite(latitude):
+                    line.append([longitude, latitude])
+            if len(line) < 2:
+                continue
+            features.append(
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "LineString", "coordinates": line},
+                    "properties": {"axis": axis, "value": value},
+                }
+            )
+    return jsonify(
+        {
+            "type": "FeatureCollection",
+            "spacing_m": spacing,
+            "features": features,
+        }
+    )
 
 
 @api.errorhandler(HTTPException)
