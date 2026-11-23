@@ -32,15 +32,14 @@ imports.
 
 ## Current development database
 
-The persistent development database is initialized with 143,181 unique
-seismic events from 149,631 accepted source rows, 14 measured borehole points,
-and 5,100 interpolated grid points. The additional 2013 workbook contributes
-6,506 source rows; 6,447 match events already in the main catalogue. Its 58
-malformed magnitude cells are retained in the original attributes and stored
-as null magnitudes. Panel `138 708` is preselected on the dashboard with its
-1989-09-01 to 1990-12-01 mining period and 100 m monitoring buffer. A fresh
-database volume does not contain these imports until the workbooks are
-imported.
+The persistent development database uses `VÝPIS SL VŠE 1.8.1989 - 30.5.2019.xlsx`
+as its event catalogue (143,125 accepted rows). The measured-depth workbook
+contains 14 borehole points and the interpolated grid contains 5,100 points;
+both are for Sloj 40 and are retained in the database but are not shown on the
+map while the application is being prepared for multiple seams. Panel
+`138 708` is preselected as Sloj 38, with its 1989-09-01 to 1990-12-01 mining
+period and 100 m monitoring buffer. A fresh database volume does not contain
+these imports until the workbooks are imported.
 
 ## Run locally or deploy
 
@@ -90,11 +89,13 @@ Open the configured HTTPS host. The UI supports:
 - importing `.xlsx` event, measured-borehole, or interpolated-grid data;
 - entering panel descriptions and ordered coordinate rows, previewing the
   polygon and outward buffer, and creating/editing/deleting panels;
-- filtering by panel monitoring area, mining dates, a custom inclusive date
-  range, minimum energy, or minimum magnitude;
+- filtering by panel monitoring area, the selected panel's mining period
+  (default), a custom inclusive date range, minimum energy, or minimum
+  magnitude;
 - inspecting a bounded set of event markers and raw event attributes, with
   whole-result statistics and monthly energy/event charts;
-- optional borehole and depth-grid point layers.
+- an optional S-JTSK coordinate grid. Borehole and depth-grid data are retained
+  in the database but hidden until multi-seam support is in place.
 
 The importer defaults to EPSG:5514 and accepts another projected or geographic
 source CRS (for example `EPSG:4326`), transforming coordinates into the stored

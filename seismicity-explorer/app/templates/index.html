@@ -40,9 +40,9 @@
             <div class="section-title"><div><p class="eyebrow">FILTERS</p><h2>Events</h2></div></div>
             <label for="period">Time period</label>
             <select id="period">
-              <option value="mining">Mining period</option>
+              <option value="mining" selected>Mining period</option>
               <option value="range">Custom date interval</option>
-              <option value="all" selected>All dates</option>
+              <option value="all">All dates</option>
             </select>
             <p class="muted small">“All dates” ignores mining dates. “Mining period” uses this panel’s saved dates. Custom dates include both endpoints.</p>
             <div id="date-range" class="date-grid hidden">
@@ -88,7 +88,7 @@
             </div>
             <p class="muted small">Paste the original description and ordered vertex rows. Preview validates the polygon and buffer before saving.</p>
             <label for="panel-seam">Seam (optional)</label>
-            <input id="panel-seam" type="text" placeholder="e.g. Sloj 40">
+            <input id="panel-seam" type="text" placeholder="e.g. Sloj 38">
             <label for="panel-description">Description and coordinates</label>
             <textarea id="panel-description" rows="11" spellcheck="false"
               placeholder="Souřadnice lomových bodů porubu 138 708&#10;&#10;1, -458381, -1103315&#10;2, -457807, -1103568&#10;3, -457826, -1103726&#10;&#10;Dobývání porubu od 1. 9. 1989 do 1. 12. 1990&#10;Oblast pro sledování seismicity: ... 100 m"></textarea>
@@ -106,8 +106,6 @@
         <section class="visual-area">
           <div class="map-toolbar">
             <div class="layer-toggles">
-              <label><input id="show-boreholes" type="checkbox"> Boreholes</label>
-              <label><input id="show-grid" type="checkbox"> Depth grid</label>
               <label><input id="show-coordinate-grid" type="checkbox"> S-JTSK coordinate grid</label>
             </div>
             <span id="event-count" class="muted small">Select a panel to begin.</span>

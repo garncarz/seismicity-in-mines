@@ -1,6 +1,7 @@
 import unittest
 
 from app import create_app
+from app.routes import _filters
 
 
 PANEL = {
@@ -35,6 +36,14 @@ class PanelRouteTests(unittest.TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Seismicity Explorer", response.data)
+        self.assertIn(b'<option value="mining" selected>', response.data)
+        self.assertNotIn(b'id="show-boreholes"', response.data)
+        self.assertNotIn(b'id="show-grid"', response.data)
+
+    def test_api_filter_defaults_to_the_panel_mining_period(self):
+        with self.client.application.test_request_context("/api/events?panel_id=1"):
+            filters = _filters()
+        self.assertEqual(filters[1], "mining")
 
     def test_coordinate_grid_returns_projected_x_and_y_lines(self):
         response = self.client.get(

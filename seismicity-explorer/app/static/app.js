@@ -8,8 +8,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 const panelLayer = L.featureGroup().addTo(map);
 const eventLayer = L.layerGroup().addTo(map);
-const boreholeLayer = L.layerGroup();
-const gridLayer = L.layerGroup();
 map.createPane("coordinateGridPane");
 map.getPane("coordinateGridPane").style.zIndex = 350;
 const coordinateGridLayer = L.geoJSON(null, {
@@ -220,30 +218,6 @@ async function applyFilters() {
   }
 }
 
-async function loadDepth(kind, targetLayer) {
-  targetLayer.clearLayers();
-  if (!panelSelect.value) return;
-  const result = await requestJson(`/api/depth-points?panel_id=${panelSelect.value}&kind=${kind}`);
-  for (const point of result.points) {
-    const marker = L.circleMarker([point.latitude, point.longitude], {
-      radius: kind === "grid" ? 3 : 6,
-      color: kind === "grid" ? "#7958a6" : "#16694c",
-      fillOpacity: kind === "grid" ? 0.42 : 0.85,
-      weight: 1,
-    });
-    const popup = document.createElement("div");
-    const heading = document.createElement("strong");
-    heading.textContent = point.identifier || (kind === "grid" ? "Interpolated depth" : "Borehole");
-    const depth = document.createElement("p");
-    depth.textContent = `Depth: ${formatNumber(point.depth_m)} m`;
-    const raw = document.createElement("pre");
-    raw.textContent = JSON.stringify(point.attributes, null, 2);
-    popup.append(heading, depth, raw);
-    marker.bindPopup(popup).addTo(targetLayer);
-  }
-  if (result.truncated) showNotice(`Only the first 5,000 ${kind} points are shown.`);
-}
-
 async function loadPanels(selectedId = null) {
   panels = await requestJson("/api/panels");
   panelSelect.replaceChildren();
@@ -277,8 +251,6 @@ function selectPanel() {
     $("#event-count").textContent = "Select a panel to begin.";
     updateStatistics({ count: 0, total_energy: 0, mean_magnitude: null, max_magnitude: null, max_energy: null, energy_distribution: [], timeline: [] });
   }
-  if ($("#show-boreholes").checked) loadDepth("borehole", boreholeLayer).catch((error) => showNotice(error.message));
-  if ($("#show-grid").checked) loadDepth("grid", gridLayer).catch((error) => showNotice(error.message));
 }
 
 async function previewPanel() {
@@ -419,18 +391,6 @@ $("#panel-description").addEventListener("input", () => {
   setPreviewState(false);
   previewLayer.clearLayers();
   $("#panel-preview-summary").textContent = "Description changed; preview the panel again before saving.";
-});
-$("#show-boreholes").addEventListener("change", async (event) => {
-  if (event.target.checked) {
-    map.addLayer(boreholeLayer);
-    try { await loadDepth("borehole", boreholeLayer); } catch (error) { showNotice(error.message); }
-  } else map.removeLayer(boreholeLayer);
-});
-$("#show-grid").addEventListener("change", async (event) => {
-  if (event.target.checked) {
-    map.addLayer(gridLayer);
-    try { await loadDepth("grid", gridLayer); } catch (error) { showNotice(error.message); }
-  } else map.removeLayer(gridLayer);
 });
 $("#show-coordinate-grid").addEventListener("change", (event) => {
   coordinateGridRequest += 1;

@@ -326,7 +326,7 @@ def _filters():
             jsonify({"error": "Select a mining panel first."}),
             400,
         )
-    mode = request.args.get("period", "all")
+    mode = request.args.get("period", "mining")
     if mode not in {"mining", "range", "all"}:
         return None, None, None, None, None, (
             jsonify({"error": "Period must be 'mining', 'range', or 'all'."}),
