@@ -139,6 +139,19 @@ function isValidIsoDate(value) {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
+function bindIsoDatePicker(fieldId, pickerId, onChange = () => {}) {
+  const field = $(fieldId);
+  const picker = $(pickerId);
+  field.addEventListener("input", () => {
+    picker.value = isValidIsoDate(field.value) ? field.value : "";
+    onChange();
+  });
+  picker.addEventListener("change", () => {
+    field.value = picker.value;
+    onChange();
+  });
+}
+
 function buildPanelDescription() {
   const identifier = $("#panel-identifier").value.trim();
   const buffer = Number($("#panel-buffer").value);
@@ -237,11 +250,14 @@ function fitPanel(panel) {
       panelLayer.addLayer(monitoring);
       panelLayer.addLayer(boundary);
     }
-  } else if (showPanelOutlines.checked) {
+  } else {
+    targetBounds = L.latLngBounds();
     for (const item of panelsForSelectedSeam()) {
-      panelLayer.addLayer(panelBoundaryLayer(item, {
+      const boundary = panelBoundaryLayer(item, {
         color: "#526b78", weight: 2, fillColor: "#526b78", fillOpacity: 0.03,
-      }));
+      });
+      targetBounds.extend(boundary.getBounds());
+      if (showPanelOutlines.checked) panelLayer.addLayer(boundary);
     }
   }
   const bounds = targetBounds || panelLayer.getBounds();
@@ -255,7 +271,13 @@ function addEventPopup(event, marker) {
   const details = document.createElement("p");
   details.textContent = `Energy: ${formatNumber(event.energy)} · Magnitude: ${formatNumber(event.magnitude)} · Z: ${formatNumber(event.z_m)} m`;
   const raw = document.createElement("pre");
-  raw.textContent = JSON.stringify(event.attributes, null, 2);
+  const attributes = Object.fromEntries(
+    Object.entries(event.attributes || {}).map(([name, value]) => [
+      name.replace(/^\uFF88tverec/i, "Čtverec").replace(/^ctverec\b/i, "Čtverec").replace(/\s+/g, " ").trim(),
+      value,
+    ]),
+  );
+  raw.textContent = JSON.stringify(attributes, null, 2);
   container.append(heading, details, raw);
   marker.bindPopup(container);
 }
@@ -333,9 +355,15 @@ function filterQuery() {
   if (!panelId) throw new Error("Select a mining panel first.");
   const query = new URLSearchParams({ panel_id: panelId, period: $("#period").value });
   if ($("#period").value === "range") {
-    if (!$("#start-date").value || !$("#end-date").value) throw new Error("Choose both dates for the custom interval.");
-    query.set("start", $("#start-date").value);
-    query.set("end", $("#end-date").value);
+    const start = $("#start-date").value;
+    const end = $("#end-date").value;
+    if (!start || !end) throw new Error("Choose both dates for the custom interval.");
+    if (!isValidIsoDate(start) || !isValidIsoDate(end)) {
+      throw new Error("Enter filter dates in YYYY-MM-DD format using valid calendar dates.");
+    }
+    if (start > end) throw new Error("From date must not be after To date.");
+    query.set("start", start);
+    query.set("end", end);
   }
   if ($("#min-energy").value) query.set("min_energy", $("#min-energy").value);
   if ($("#min-magnitude").value) query.set("min_magnitude", $("#min-magnitude").value);
@@ -583,6 +611,15 @@ $("#new-panel").addEventListener("click", () => {
   $("#panel-management").open = true;
   $("#panel-identifier").focus();
 });
+$("#clear-panel-selection").addEventListener("click", () => {
+  if (editingId) {
+    showNotice("Save or cancel panel editing before clearing the selection.");
+    return;
+  }
+  clearNotice();
+  panelSelect.value = "";
+  selectPanel();
+});
 $("#import-form").addEventListener("submit", importWorkbook);
 for (const selector of ["#panel-identifier", "#panel-seam", "#panel-buffer"]) {
   $(selector).addEventListener("input", invalidatePanelPreview);
@@ -590,17 +627,10 @@ for (const selector of ["#panel-identifier", "#panel-seam", "#panel-buffer"]) {
 for (const [fieldId, pickerId] of [
   ["#panel-start", "#panel-start-picker"],
   ["#panel-end", "#panel-end-picker"],
+  ["#start-date", "#start-date-picker"],
+  ["#end-date", "#end-date-picker"],
 ]) {
-  const field = $(fieldId);
-  const picker = $(pickerId);
-  field.addEventListener("input", () => {
-    picker.value = isValidIsoDate(field.value) ? field.value : "";
-    invalidatePanelPreview();
-  });
-  picker.addEventListener("change", () => {
-    field.value = picker.value;
-    invalidatePanelPreview();
-  });
+  bindIsoDatePicker(fieldId, pickerId, fieldId.startsWith("#panel-") ? invalidatePanelPreview : undefined);
 }
 document.querySelectorAll(".calendar-picker-trigger").forEach((button) => {
   button.addEventListener("click", () => {

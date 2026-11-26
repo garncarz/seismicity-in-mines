@@ -51,6 +51,11 @@ class PanelRouteTests(unittest.TestCase):
         self.assertIn(b'id="save-panel" class="button primary" type="button">Save panel', response.data)
         self.assertIn(b'id="show-panel-outlines" type="checkbox" checked', response.data)
         self.assertNotIn(b'id="outline-mode"', response.data)
+        self.assertIn(b'id="clear-panel-selection"', response.data)
+        self.assertIn("🔄".encode(), response.data)
+        self.assertIn(b'id="start-date" type="text"', response.data)
+        self.assertIn(b'id="end-date" type="text"', response.data)
+        self.assertIn(b'placeholder="YYYY-MM-DD"', response.data)
         self.assertNotIn(b'id="show-boreholes"', response.data)
         self.assertNotIn(b'id="show-grid"', response.data)
 

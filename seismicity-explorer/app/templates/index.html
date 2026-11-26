@@ -24,7 +24,13 @@
           <section class="card">
             <div class="section-title">
               <div><p class="eyebrow">DASHBOARD</p><h2>Panel 138 708</h2></div>
-              <button id="new-panel" class="button secondary" type="button">New</button>
+              <div class="section-actions">
+                <button id="clear-panel-selection" class="button secondary icon-button" type="button"
+                  aria-label="Clear panel selection and show overview" title="Clear panel selection and show overview">
+                  <span aria-hidden="true">🔄</span>
+                </button>
+                <button id="new-panel" class="button secondary" type="button">New</button>
+              </div>
             </div>
             <div class="button-row panel-management">
               <button class="edit-selected button secondary" type="button">Edit selected</button>
@@ -48,8 +54,40 @@
             </select>
             <p class="muted small">“All dates” ignores mining dates. “Mining period” uses this panel’s saved dates. Custom dates include both endpoints.</p>
             <div id="date-range" class="date-grid hidden">
-              <div><label for="start-date">From</label><input id="start-date" type="date"></div>
-              <div><label for="end-date">To</label><input id="end-date" type="date"></div>
+              <div>
+                <label for="start-date">From</label>
+                <div class="date-entry">
+                  <input id="start-date" type="text" inputmode="numeric" maxlength="10"
+                    placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}">
+                  <span class="date-picker-control">
+                    <button class="button secondary calendar-picker-trigger" type="button"
+                      data-picker="start-date-picker" aria-label="Choose from date">
+                      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                        <rect x="3" y="5" width="14" height="12" rx="2"></rect>
+                        <path d="M6 3v4M14 3v4M3 9h14"></path>
+                      </svg>
+                    </button>
+                    <input id="start-date-picker" class="native-date-picker" type="date" tabindex="-1" aria-hidden="true">
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label for="end-date">To</label>
+                <div class="date-entry">
+                  <input id="end-date" type="text" inputmode="numeric" maxlength="10"
+                    placeholder="YYYY-MM-DD" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}">
+                  <span class="date-picker-control">
+                    <button class="button secondary calendar-picker-trigger" type="button"
+                      data-picker="end-date-picker" aria-label="Choose to date">
+                      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                        <rect x="3" y="5" width="14" height="12" rx="2"></rect>
+                        <path d="M6 3v4M14 3v4M3 9h14"></path>
+                      </svg>
+                    </button>
+                    <input id="end-date-picker" class="native-date-picker" type="date" tabindex="-1" aria-hidden="true">
+                  </span>
+                </div>
+              </div>
             </div>
             <div class="filter-grid">
               <div><label for="min-energy">Minimum energy</label><input id="min-energy" type="number" min="0" step="any" placeholder="Any"></div>
