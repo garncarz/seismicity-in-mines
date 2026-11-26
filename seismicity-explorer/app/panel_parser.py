@@ -37,17 +37,25 @@ def _coordinate(value: str) -> float:
 
 def parse_panel(description: str) -> dict:
     if not description.strip():
-        raise PanelInputError("Paste the panel description and its vertex coordinates.")
+        raise PanelInputError("Provide the panel details and boundary coordinates.")
 
     identifier_match = re.search(
         r"\bporub(?:u|y)?\s*(?:(?:č(?:\s*íslo)?\.?|cislo)\s*)?[:#-]?\s*"
-        r"(\d+(?:[\s/,-]+\d+)?)",
+        r"([^\r\n(]+)",
         description,
         re.IGNORECASE,
     )
     if not identifier_match:
         raise PanelInputError("Could not find a panel identifier after 'porub'.")
-    identifier = re.sub(r"[\s/,-]+", " ", identifier_match.group(1)).strip()
+    raw_identifier = identifier_match.group(1).strip().rstrip(" ,;:")
+    if re.fullmatch(r"\d+(?:[\s/,-]+\d+)?", raw_identifier):
+        identifier = re.sub(r"[\s/,-]+", " ", raw_identifier).strip()
+    else:
+        identifier = re.sub(r"\s+", " ", raw_identifier)
+    if not identifier or not re.fullmatch(r"[\w./ -]+", identifier):
+        raise PanelInputError("Panel name may contain letters, numbers, spaces, dots, slashes, or hyphens.")
+    if len(identifier) > 100:
+        raise PanelInputError("Panel name must be 100 characters or fewer.")
 
     points: list[tuple[int, float, float]] = []
     for line in description.splitlines():

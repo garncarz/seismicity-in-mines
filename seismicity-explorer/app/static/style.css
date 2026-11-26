@@ -44,9 +44,25 @@ input:focus, select:focus, textarea:focus { border-color: var(--blue); outline: 
 .primary:hover:not(:disabled) { background: var(--blue-dark); }
 .secondary { background: var(--teal-soft); border-color: #c9e0e2; color: var(--blue-dark); }
 .full { margin-top: 12px; width: 100%; }
-.button-row { display: flex; gap: 8px; margin-top: 10px; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .text-button { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 11px; margin-top: 9px; padding: 0; }
 .filter-grid, .date-grid { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+.date-entry { display: flex; gap: 5px; }
+.date-entry > input { min-width: 0; }
+.date-picker-control { flex: 0 0 38px; position: relative; }
+.date-picker-control button { align-items: center; display: flex; height: 34px; justify-content: center; min-height: 34px; padding: 5px; position: relative; width: 38px; z-index: 1; }
+.date-picker-control svg { fill: none; height: 17px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; width: 17px; }
+.date-picker-control input[type="date"] { cursor: pointer; height: 34px; inset: 0; min-height: 34px; opacity: 0; position: absolute; width: 100%; }
+.date-picker-control:focus-within { border-radius: 5px; outline: 2px solid #176f8625; }
+.point-list-heading { align-items: end; margin: 12px 0 6px; }
+.point-list-heading label { margin-top: 0; }
+.point-list-heading p { margin: 0; }
+.point-list-heading .button { flex: 0 0 auto; }
+.panel-points { display: grid; gap: 6px; }
+.panel-point { align-items: center; display: grid; gap: 6px; grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr) 52px; }
+.panel-point-number { color: var(--muted); font-size: 11px; text-align: center; }
+.panel-point input { min-width: 0; }
+.panel-point .text-button { margin: 0; }
 .hidden { display: none !important; }
 .muted { color: var(--muted); }
 .small { font-size: 11px; line-height: 1.5; }

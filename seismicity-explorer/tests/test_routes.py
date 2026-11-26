@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from app import create_app
 from app.routes import _filters
@@ -32,11 +33,24 @@ class PanelRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("vertices", response.get_json()["error"])
 
+    def test_create_panel_does_not_require_a_preview_request(self):
+        with patch("app.routes.connect") as connect:
+            connection = connect.return_value.__enter__.return_value
+            connection.execute.return_value.fetchone.return_value = (42,)
+            response = self.client.post("/api/panels", json={**PANEL, "seam": "Sloj 38"})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(), {"id": 42, "identifier": "138 708"})
+        self.assertIn("INSERT INTO mining_panels", connection.execute.call_args.args[0])
+
     def test_homepage_serves_the_application_shell(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Seismicity Explorer", response.data)
         self.assertIn(b'<option value="mining" selected>', response.data)
+        self.assertIn(b'id="save-panel" class="button primary" type="button">Save panel', response.data)
+        self.assertIn(b'id="show-panel-outlines" type="checkbox" checked', response.data)
+        self.assertNotIn(b'id="outline-mode"', response.data)
         self.assertNotIn(b'id="show-boreholes"', response.data)
         self.assertNotIn(b'id="show-grid"', response.data)
 

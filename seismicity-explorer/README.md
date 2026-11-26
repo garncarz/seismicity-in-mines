@@ -87,8 +87,10 @@ future schema changes should be added as numbered migrations.
 Open the configured HTTPS host. The UI supports:
 
 - importing `.xlsx` event, measured-borehole, or interpolated-grid data;
-- entering panel descriptions and ordered coordinate rows, previewing the
-  polygon and outward buffer, and creating/editing/deleting panels;
+- entering panel name, optional seam (*sloj*), mining dates with calendar
+  inputs, buffer distance, and a dynamic ordered list of boundary points;
+  previewing the polygon and buffer before creating or editing a panel. Edits
+  retain the saved original description for provenance;
 - filtering by panel monitoring area, the selected panel's mining period
   (default), a custom inclusive date range, minimum energy, or minimum
   magnitude;

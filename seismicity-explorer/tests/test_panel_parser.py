@@ -44,6 +44,15 @@ class PanelParserTests(unittest.TestCase):
         self.assertEqual(parsed["identifier"], "42 7")
         self.assertEqual(parsed["buffer_m"], 75)
 
+    def test_accepts_named_panel_identifier(self):
+        parsed = parse_panel(
+            "Porub Severní-Panel A\n"
+            "1, -458000, -1103000\n"
+            "2, -457900, -1103000\n"
+            "3, -457900, -1102900"
+        )
+        self.assertEqual(parsed["identifier"], "Severní-Panel A")
+
     def test_rejects_self_intersecting_boundary(self):
         with self.assertRaisesRegex(PanelInputError, "invalid"):
             parse_panel(

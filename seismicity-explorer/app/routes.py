@@ -232,6 +232,10 @@ def update_panel(panel_id: int):
     parsed, seam, error = _panel_input()
     if error:
         return error
+    data = request.get_json(silent=True) or {}
+    original_description = data.get("original_description", data.get("description"))
+    if not isinstance(original_description, str):
+        return jsonify({"error": "Original panel description must be text."}), 400
     polygon = Polygon(parsed["vertices"])
     with connect() as connection:
         row = connection.execute(
@@ -246,7 +250,7 @@ def update_panel(panel_id: int):
                 parsed["mining_start"],
                 parsed["mining_end"],
                 parsed["buffer_m"],
-                request.get_json()["description"],
+                original_description,
                 Jsonb(parsed["vertices"]),
                 polygon.wkt,
                 polygon.wkt,
